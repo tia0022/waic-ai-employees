@@ -1,18 +1,29 @@
 'use client'
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import JourneyPanel from '@/components/JourneyPanel'
 import AgentChat from '@/components/AgentChat'
 import DemoPanel, { DEMO_SCENES } from '@/components/DemoPanel'
+import ProfitCalc from '@/components/ProfitCalc'
+
+// Leaflet requires window — load client-side only
+const WorldMap = dynamic(() => import('@/components/WorldMap'), { ssr: false })
+
+type CenterTab = 'chat' | 'map'
+type RightTab = 'demo' | 'profit'
 
 export default function Home() {
   const [mode, setMode] = useState<'demo' | 'live'>('live')
   const [demoScene, setDemoScene] = useState(-1)
+  const [centerTab, setCenterTab] = useState<CenterTab>('chat')
+  const [rightTab, setRightTab] = useState<RightTab>('profit')
+  const [mapPlaying, setMapPlaying] = useState(false)
 
   const activeScene = demoScene >= 0 && demoScene < DEMO_SCENES.length ? DEMO_SCENES[demoScene] : null
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      {/* Header */}
+      {/* ── HEADER ── */}
       <header style={{
         height: 52, flexShrink: 0, background: 'var(--bg2)',
         borderBottom: '1px solid var(--border)',
@@ -53,9 +64,10 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main 3-column layout */}
-      <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '210px 1fr 220px' }}>
-        {/* Left: Journey + Mode */}
+      {/* ── MAIN 3-COLUMN ── */}
+      <main style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '210px 1fr 248px' }}>
+
+        {/* LEFT: Journey + Mode */}
         <JourneyPanel
           activeNodes={activeScene?.nodes ?? []}
           activeAgents={activeScene?.agents ?? []}
@@ -63,35 +75,96 @@ export default function Home() {
           onModeChange={setMode}
         />
 
-        {/* Center: Chat */}
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
-          {/* Top bar */}
+        {/* CENTER: Tab — Chat | Map */}
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden',
+          borderRight: '1px solid var(--border)' }}>
+
+          {/* Center tab bar */}
           <div style={{
             height: 44, flexShrink: 0, background: 'var(--bg2)', borderBottom: '1px solid var(--border)',
-            display: 'flex', alignItems: 'center', padding: '0 18px', gap: 10,
+            display: 'flex', alignItems: 'center', padding: '0 16px', gap: 4,
           }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>跨赋经营指挥台</span>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-              {['经营评估','达人营销','合规审计','物流调度','分析师'].map((label, i) => {
-                const colors = ['var(--supply)', 'var(--marketing)', 'var(--compliance)', 'var(--logistics)', 'var(--analyst)']
-                return (
-                  <span key={label} style={{
-                    fontSize: 10, padding: '2px 8px', borderRadius: 4,
-                    background: `${colors[i]}11`, border: `1px solid ${colors[i]}33`, color: colors[i],
-                  }}>{label}</span>
-                )
-              })}
-            </div>
+            <TabBtn active={centerTab === 'chat'} onClick={() => setCenterTab('chat')} color="#6366f1">
+              经营指挥台
+            </TabBtn>
+            <TabBtn active={centerTab === 'map'} onClick={() => setCenterTab('map')} color="#38bdf8">
+              全球物流地图
+            </TabBtn>
+            {centerTab === 'map' && (
+              <button onClick={() => setMapPlaying(p => !p)} style={{
+                marginLeft: 'auto', fontSize: 10, padding: '3px 10px', borderRadius: 6,
+                border: '1px solid rgba(56,189,248,0.3)', background: mapPlaying ? 'rgba(56,189,248,0.15)' : 'transparent',
+                color: '#38bdf8', cursor: 'pointer', fontFamily: 'inherit',
+              }}>
+                {mapPlaying ? '⏹ 停止' : '▶ 动画'}
+              </button>
+            )}
+            {centerTab === 'chat' && (
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 5 }}>
+                {['经营评估','达人营销','合规审计','物流调度','分析师'].map((label, i) => {
+                  const colors = ['#00c9a7','#f97316','#f59e0b','#38bdf8','#a78bfa']
+                  return (
+                    <span key={label} style={{
+                      fontSize: 9, padding: '2px 7px', borderRadius: 4,
+                      background: `${colors[i]}11`, border: `1px solid ${colors[i]}33`, color: colors[i],
+                    }}>{label}</span>
+                  )
+                })}
+              </div>
+            )}
           </div>
-          {/* Chat component */}
-          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+
+          {/* Center content */}
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: centerTab === 'chat' ? 'block' : 'none' }}>
             <AgentChat demoMode={mode === 'demo'} />
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: centerTab === 'map' ? 'block' : 'none' }}>
+            <WorldMap activeNode={activeScene ? activeScene.nodes[activeScene.nodes.length - 1] ?? -1 : -1} playing={mapPlaying} />
           </div>
         </div>
 
-        {/* Right: Demo scenes panel */}
-        <DemoPanel currentScene={demoScene} onSceneChange={setDemoScene} />
+        {/* RIGHT: Tab — Demo | Profit */}
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', background: 'var(--bg2)' }}>
+          
+          {/* Right tab bar */}
+          <div style={{
+            height: 44, flexShrink: 0, borderBottom: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', padding: '0 10px', gap: 4,
+          }}>
+            <TabBtn active={rightTab === 'profit'} onClick={() => setRightTab('profit')} color="#a78bfa">
+              利润核算
+            </TabBtn>
+            <TabBtn active={rightTab === 'demo'} onClick={() => setRightTab('demo')} color="#6366f1">
+              演示场景
+            </TabBtn>
+          </div>
+
+          {/* Right content */}
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: rightTab === 'demo' ? 'flex' : 'none', flexDirection: 'column' }}>
+            <DemoPanel currentScene={demoScene} onSceneChange={setDemoScene} />
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: rightTab === 'profit' ? 'block' : 'none' }}>
+            <ProfitCalc />
+          </div>
+        </div>
       </main>
     </div>
+  )
+}
+
+function TabBtn({ active, onClick, color, children }: {
+  active: boolean; onClick: () => void; color: string; children: React.ReactNode
+}) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
+      fontFamily: 'inherit', fontSize: 11, fontWeight: active ? 700 : 500,
+      background: active ? `${color}18` : 'transparent',
+      color: active ? color : 'var(--muted)',
+      borderBottom: active ? `2px solid ${color}` : '2px solid transparent',
+      transition: 'all 0.15s',
+    }}>
+      {children}
+    </button>
   )
 }

@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>明心数智 · 跨赋AI平台 — 一只茶杯的全球旅程 WAIC 2026</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #070a12; --bg2: #0d1120; --bg3: #131829;
+    --border: #1e2640; --text: #e2e8f0; --muted: #64748b;
+    --supply: #00c9a7; --marketing: #f97316; --compliance: #f59e0b;
+    --logistics: #38bdf8; --analyst: #a78bfa; --vault: #34d399;
+    --brand: #6366f1;
+  }
+  html, body { height: 100%; overflow: hidden; font-family: 'SF Pro Display', -apple-system, 'PingFang SC', sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ── HEADER ── */
+  header {
+    height: 52px; flex-shrink: 0;
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10;
+  }
+  .header-brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: linear-gradient(135deg, #6366f1, #00c9a7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -0.5px;
+  }
+  .brand-name { font-size: 14px; font-weight: 700; color: #fff; }
+  .brand-product {
+    font-size: 11px; padding: 2px 8px; border-radius: 4px;
+    background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.25); color: #818cf8;
+  }
+  .brand-sub { font-size: 11px; color: var(--muted); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-stat { font-size: 10px; color: var(--muted); }
+  .header-stat strong { color: var(--supply); font-weight: 600; }
+  .waic-badge {
+    font-size: 10px; padding: 3px 10px; border-radius: 20px;
+    background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25);
+    color: var(--supply); letter-spacing: 1px; font-weight: 600;
+  }
+  .status-pill {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); color: #818cf8;
+  }
+
+  /* ── MAIN LAYOUT: must be height-constrained for inner scroll to work ── */
+  .layout-wrap { display: flex; flex-direction: column; height: 100vh; }
+  .main {
+    flex: 1; min-height: 0; /* KEY: allows children to shrink */
+    display: grid; grid-template-columns: 210px 1fr 295px;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    background: var(--bg2); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+  }
+  .panel-label {
+    padding: 12px 14px 8px; flex-shrink: 0;
+    font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .journey-scroll { flex: 1; overflow-y: auto; padding: 16px 14px; }
+  .journey-scroll::-webkit-scrollbar { width: 3px; }
+  .journey-scroll::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .journey-node {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding-bottom: 20px; opacity: 0.3; transition: opacity 0.5s;
+  }
+  .journey-node.active { opacity: 1; }
+  .journey-node.done { opacity: 0.65; }
+  .node-track { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .node-dot {
+    width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--muted);
+    margin-top: 3px; transition: all 0.4s; background: transparent;
+  }
+  .journey-node.active .node-dot { border-color: var(--supply); background: var(--supply); box-shadow: 0 0 8px var(--supply); }
+  .journey-node.done .node-dot { border-color: var(--supply); background: rgba(0,201,167,0.35); }
+  .node-line { width: 1px; flex: 1; min-height: 14px; background: var(--border); }
+  .journey-node:last-child .node-line { display: none; }
+  .node-info { min-width: 0; }
+  .node-city { font-size: 11.5px; font-weight: 600; color: var(--text); }
+  .node-detail { font-size: 10px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
+  .node-tag { display: inline-block; margin-top: 4px; font-size: 9px; padding: 1px 5px; border-radius: 3px; color: var(--muted); background: rgba(100,116,139,0.1); }
+  .journey-node.active .node-tag { background: rgba(0,201,167,0.15); color: var(--supply); }
+  .journey-node.done .node-tag { background: rgba(0,201,167,0.08); color: #64a99a; }
+
+  /* agent status */
+  .agent-section { flex-shrink: 0; border-top: 1px solid var(--border); padding: 10px 14px 12px; }
+  .agent-section-label { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+  .agent-row { display: flex; align-items: center; gap: 7px; padding: 4px 0; }
+  .agent-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .agent-dot.running { animation: blink 1s infinite; }
+  .agent-dot.done { opacity: 0.7; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .agent-label { flex: 1; font-size: 10.5px; color: var(--muted); }
+  .agent-label.active { color: var(--text); font-weight: 500; }
+  .agent-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; }
+
+  /* ── CENTER: CHAT ── */
+  .chat-panel {
+    display: flex; flex-direction: column; min-height: 0; /* KEY */
+    background: var(--bg); overflow: hidden;
+  }
+  .chat-topbar {
+    flex-shrink: 0; padding: 9px 18px;
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .chat-title { font-size: 13px; font-weight: 600; }
+  .chip-row { display: flex; gap: 5px; margin-left: auto; flex-wrap: wrap; }
+  .chip {
+    font-size: 10px; padding: 2px 8px; border-radius: 8px; border: 1px solid;
+    opacity: 0.35; transition: all 0.4s;
+  }
+  .chip.lit { opacity: 1; }
+
+  /* messages area — the scrollable zone */
+  .msgs {
+    flex: 1; min-height: 0; /* KEY: without this, won't scroll */
+    overflow-y: auto; padding: 18px 18px 10px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .msgs::-webkit-scrollbar { width: 4px; }
+  .msgs::-webkit-scrollbar-track { background: transparent; }
+  .msgs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* message bubble */
+  .msg { display: flex; gap: 9px; align-items: flex-start; opacity: 0; transform: translateY(8px); transition: all 0.35s ease; }
+  .msg.show { opacity: 1; transform: translateY(0); }
+  .msg.user { flex-direction: row-reverse; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .bubble-wrap { flex: 1; max-width: 88%; }
+  .sender { font-size: 9.5px; font-weight: 600; margin-bottom: 4px; opacity: 0.85; }
+  .msg.user .sender { text-align: right; }
+  .bubble {
+    padding: 9px 12px; border-radius: 0 9px 9px 9px;
+    font-size: 12px; line-height: 1.7; border: 1px solid;
+  }
+  .msg.user .bubble { border-radius: 9px 0 9px 9px; background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.22); }
+  .msg.user .sender { color: #818cf8; }
+
+  /* per-agent colors */
+  .msg.orch .avatar { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.25); }
+  .msg.orch .bubble { background: rgba(99,102,241,0.05); border-color: rgba(99,102,241,0.18); }
+  .msg.orch .sender { color: #818cf8; }
+
+  .msg.supply .avatar { background: rgba(0,201,167,0.12); color: var(--supply); border: 1px solid rgba(0,201,167,0.25); }
+  .msg.supply .bubble { background: rgba(0,201,167,0.04); border-color: rgba(0,201,167,0.18); }
+  .msg.supply .sender { color: var(--supply); }
+
+  .msg.mkt .avatar { background: rgba(249,115,22,0.12); color: var(--marketing); border: 1px solid rgba(249,115,22,0.25); }
+  .msg.mkt .bubble { background: rgba(249,115,22,0.04); border-color: rgba(249,115,22,0.18); }
+  .msg.mkt .sender { color: var(--marketing); }
+
+  .msg.comp .avatar { background: rgba(245,158,11,0.12); color: var(--compliance); border: 1px solid rgba(245,158,11,0.25); }
+  .msg.comp .bubble { background: rgba(245,158,11,0.04); border-color: rgba(245,158,11,0.18); }
+  .msg.comp .sender { color: var(--compliance); }
+
+  .msg.log .avatar { background: rgba(56,189,248,0.12); color: var(--logistics); border: 1px solid rgba(56,189,248,0.25); }
+  .msg.log .bubble { background: rgba(56,189,248,0.04); border-color: rgba(56,189,248,0.18); }
+  .msg.log .sender { color: var(--logistics); }
+
+  .msg.ana .avatar { background: rgba(167,139,250,0.12); color: var(--analyst); border: 1px solid rgba(167,139,250,0.25); }
+  .msg.ana .bubble { background: rgba(167,139,250,0.04); border-color: rgba(167,139,250,0.18); }
+  .msg.ana .sender { color: var(--analyst); }
+
+  .msg.vault .avatar { background: rgba(52,211,153,0.12); color: var(--vault); border: 1px solid rgba(52,211,153,0.25); }
+  .msg.vault .bubble { background: rgba(52,211,153,0.04); border-color: rgba(52,211,153,0.18); }
+  .msg.vault .sender { color: var(--vault); }
+
+  /* typing dots */
+  .typing { display: flex; gap: 4px; align-items: center; padding: 2px 0; }
+  .typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: tdot 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes tdot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
+
+  /* inline elements */
+  .hl { color: #fff; font-weight: 600; }
+  .tag { display: inline-block; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 700; margin: 0 2px; font-family: monospace; }
+  .mono { background: rgba(255,255,255,0.07); padding: 1px 5px; border-radius: 3px; font-family: monospace; font-size: 11px; color: #cbd5e1; }
+
+  /* dispatch table */
+  .dispatch-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+  .dr {
+    display: flex; align-items: center; gap: 7px;
+    padding: 5px 8px; border-radius: 5px;
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.05);
+  }
+  .dr-agent { font-size: 10.5px; font-weight: 600; }
+  .dr-task { font-size: 9.5px; color: var(--muted); margin-left: auto; max-width: 180px; text-align: right; }
+  .dr-badge { font-size: 9px; padding: 1px 5px; border-radius: 2px; font-weight: 700; flex-shrink: 0; }
+
+  /* HITL box */
+  .hitl {
+    margin: 7px 0; padding: 9px 12px; border-radius: 7px;
+    background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.28);
+    display: flex; align-items: center; gap: 9px;
+  }
+  .hitl-ico { font-size: 15px; flex-shrink: 0; }
+  .hitl-txt { flex: 1; font-size: 10.5px; color: #fbbf24; line-height: 1.5; }
+  .hitl-btn {
+    font-size: 10px; padding: 3px 10px; border-radius: 5px; border: none;
+    background: rgba(245,158,11,0.22); color: #fbbf24;
+    cursor: pointer; font-family: inherit; font-weight: 600; flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .hitl-btn:hover { background: rgba(245,158,11,0.35); }
+  .hitl-ok { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: rgba(0,201,167,0.12); color: var(--supply); display: none; flex-shrink: 0; }
+
+  /* anomaly */
+  .anomaly {
+    padding: 9px 12px; border-radius: 7px; margin: 5px 0;
+    background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.28);
+  }
+  .anomaly-t { font-size: 11px; color: #f87171; font-weight: 700; margin-bottom: 3px; }
+  .anomaly-b { font-size: 10.5px; color: #94a3b8; line-height: 1.5; }
+  .anomaly-a { font-size: 10px; color: var(--logistics); margin-top: 4px; font-weight: 600; }
+
+  /* profit box */
+  .profit-box {
+    margin: 6px 0; padding: 10px 12px; border-radius: 8px;
+    background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.25);
+  }
+  .profit-title { font-size: 10.5px; color: var(--analyst); font-weight: 700; margin-bottom: 7px; }
+  .profit-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 10.5px; }
+  .profit-label { color: var(--muted); }
+  .profit-total { border-top: 1px solid rgba(167,139,250,0.2); margin-top: 5px; padding-top: 5px; font-weight: 700; font-size: 12px; color: var(--supply); display: flex; justify-content: space-between; }
+
+  /* progress + input */
+  .progress-wrap { flex-shrink: 0; padding: 7px 18px; background: var(--bg2); border-top: 1px solid var(--border); }
+  .progress-meta { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .progress-meta span { font-size: 10px; color: var(--muted); }
+  .progress-track { height: 3px; background: var(--border); border-radius: 2px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--supply), var(--analyst)); border-radius: 2px; width: 0%; transition: width 0.9s ease; }
+
+  .input-area { flex-shrink: 0; padding: 12px 18px; background: var(--bg2); border-top: 1px solid var(--border); }
+  .input-row { display: flex; gap: 8px; }
+  .cinput {
+    flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 9px;
+    padding: 9px 12px; color: var(--text); font-size: 12.5px; outline: none;
+    font-family: inherit; resize: none; min-height: 38px;
+  }
+  .cinput:focus { border-color: rgba(99,102,241,0.4); }
+  .send-btn {
+    width: 34px; height: 34px; border-radius: 7px; border: none;
+    background: rgba(99,102,241,0.75); color: #fff; cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .send-btn:hover { background: rgba(99,102,241,1); }
+
+  /* ── RIGHT: DELIVERABLES ── */
+  .right-panel {
+    background: var(--bg2); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  }
+  .dlist { flex: 1; min-height: 0; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+  .dlist::-webkit-scrollbar { width: 3px; }
+  .dlist::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .dcard {
+    border-radius: 8px; border: 1px solid; padding: 9px 11px;
+    opacity: 0; transform: translateX(16px); transition: all 0.4s ease;
+    position: relative; overflow: hidden;
+  }
+  .dcard.show { opacity: 1; transform: translateX(0); }
+  .dcard::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+
+  .dc-supply { border-color: rgba(0,201,167,0.22); background: rgba(0,201,167,0.04); }
+  .dc-supply::before { background: var(--supply); }
+  .dc-mkt { border-color: rgba(249,115,22,0.22); background: rgba(249,115,22,0.04); }
+  .dc-mkt::before { background: var(--marketing); }
+  .dc-comp { border-color: rgba(245,158,11,0.22); background: rgba(245,158,11,0.04); }
+  .dc-comp::before { background: var(--compliance); }
+  .dc-log { border-color: rgba(56,189,248,0.22); background: rgba(56,189,248,0.04); }
+  .dc-log::before { background: var(--logistics); }
+  .dc-ana { border-color: rgba(167,139,250,0.22); background: rgba(167,139,250,0.04); }
+  .dc-ana::before { background: var(--analyst); }
+  .dc-vault { border-color: rgba(52,211,153,0.22); background: rgba(52,211,153,0.04); }
+  .dc-vault::before { background: var(--vault); }
+
+  .dcard-head { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .dcard-icon { font-size: 13px; }
+  .dcard-title { font-size: 11px; font-weight: 600; flex: 1; }
+  .dcard-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+  .dc-supply .dcard-badge { background: rgba(0,201,167,0.12); color: var(--supply); }
+  .dc-mkt .dcard-badge { background: rgba(249,115,22,0.12); color: var(--marketing); }
+  .dc-comp .dcard-badge { background: rgba(245,158,11,0.12); color: var(--compliance); }
+  .dc-log .dcard-badge { background: rgba(56,189,248,0.12); color: var(--logistics); }
+  .dc-ana .dcard-badge { background: rgba(167,139,250,0.12); color: var(--analyst); }
+  .dc-vault .dcard-badge { background: rgba(52,211,153,0.12); color: var(--vault); }
+
+  .drow { display: flex; justify-content: space-between; padding: 2px 0; }
+  .drow-l { font-size: 10px; color: var(--muted); }
+  .drow-v { font-size: 10px; color: var(--text); font-weight: 600; }
+  .dbody { font-size: 10px; color: #94a3b8; line-height: 1.6; }
+  .hash { font-family: monospace; font-size: 9px; color: var(--vault); word-break: break-all; background: rgba(52,211,153,0.05); padding: 3px 5px; border-radius: 3px; margin-top: 3px; }
+
+  /* ── CONTROLS ── */
+  .controls {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 200; background: rgba(10,14,24,0.92);
+    padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border);
+    backdrop-filter: blur(12px); display: flex; align-items: center; gap: 8px;
+  }
+  .cbtn {
+    font-size: 11.5px; padding: 5px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .cbtn.primary { background: rgba(99,102,241,0.18); border-color: rgba(99,102,241,0.35); color: #818cf8; }
+  .cbtn:hover:not(:disabled) { background: rgba(255,255,255,0.05); color: var(--text); }
+  .cbtn.primary:hover:not(:disabled) { background: rgba(99,102,241,0.28); }
+  .cbtn:disabled { opacity: 0.3; cursor: default; }
+  .cscene { font-size: 10.5px; color: var(--muted); padding: 0 4px; }
+</style>
+</head>
+<body>
+<div class="layout-wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="header-brand">
+    <div class="brand-logo">明</div>
+    <span class="brand-name">明心数智</span>
+    <span class="brand-product">跨赋AI平台</span>
+    <span class="brand-sub">产业出海 · 全链路智能调度</span>
+  </div>
+  <div class="header-right">
+    <span class="header-stat">贷款规模 <strong>超1500亿元</strong></span>
+    <span class="header-stat">中美海关覆盖 <strong>100%</strong></span>
+    <span class="status-pill" id="hStatus">待机中</span>
+    <span class="waic-badge">WAIC 2026</span>
+  </div>
+</header>
+
+<div class="main">
+
+<!-- LEFT -->
+<div class="left-panel">
+  <div class="panel-label">全链路旅程</div>
+  <div class="journey-scroll">
+    <div class="journey-node" id="jn0">
+      <div class="node-track"><div class="node-dot"></div><div class="node-line"></div></div>
+      <div class="node-info">
+        <div class="node-city">景德镇 · 工厂</div>
+        <div class="node-detail">SKU建模 / 质检<br>贸易融资评估</div>
+        <span class="node-tag" id="nt0">PENDING</span>
+      </div>
+    </div>
+    <div class="journey-node" id="jn1">
+      <div class="node-track"><div class="node-dot"></div><div class="node-line"></div></div>
+      <div class="node-info">
+        <div class="node-city">深圳盐田港</div>
+        <div class="node-detail">出口报关 / HS归类<br>AI退税申报</div>
+        <span class="node-tag" id="nt1">PENDING</span>
+      </div>
+    </div>
+    <div class="journey-node" id="jn2">
+      <div class="node-track"><div class="node-dot"></div><div class="node-line"></div></div>
+      <div class="node-info">
+        <div class="node-city">太平洋干线</div>
+        <div class="node-detail">海运13天 / 空运4天<br>运踪GPT全程监控</div>
+        <span class="node-tag" id="nt2">PENDING</span>
+      </div>
+    </div>
+    <div class="journey-node" id="jn3">
+      <div class="node-track"><div class="node-dot"></div><div class="node-line"></div></div>
+      <div class="node-info">
+        <div class="node-city">洛杉矶港</div>
+        <div class="node-detail">FDA清关 / 铅镉检测<br>加州 Sales Tax 申报</div>
+        <span class="node-tag" id="nt3">PENDING</span>
+      </div>
+    </div>
+    <div class="journey-node" id="jn4">
+      <div class="node-track"><div class="node-dot"></div><div class="node-line"></div></div>
+      <div class="node-info">
+        <div class="node-city">洛杉矶 C端买家</div>
+        <div class="node-detail">TikTok Shop / Shopify<br>USPS 尾程派送</div>
+        <span class="node-tag" id="nt4">PENDING</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="agent-section">
+    <div class="agent-section-label">AI 员工状态</div>
+    <div class="agent-row">
+      <div class="agent-dot" id="ad-supply" style="background:var(--supply)"></div>
+      <span class="agent-label" id="al-supply">经营评估小明</span>
+      <span class="agent-badge" id="ab-supply" style="background:rgba(0,201,167,0.1);color:var(--supply)">待机</span>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" id="ad-mkt" style="background:var(--marketing)"></div>
+      <span class="agent-label" id="al-mkt">达人营销小明</span>
+      <span class="agent-badge" id="ab-mkt" style="background:rgba(249,115,22,0.1);color:var(--marketing)">待机</span>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" id="ad-comp" style="background:var(--compliance)"></div>
+      <span class="agent-label" id="al-comp">合规小明</span>
+      <span class="agent-badge" id="ab-comp" style="background:rgba(245,158,11,0.1);color:var(--compliance)">待机</span>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" id="ad-log" style="background:var(--logistics)"></div>
+      <span class="agent-label" id="al-log">物流小明</span>
+      <span class="agent-badge" id="ab-log" style="background:rgba(56,189,248,0.1);color:var(--logistics)">待机</span>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" id="ad-ana" style="background:var(--analyst)"></div>
+      <span class="agent-label" id="al-ana">分析师小明</span>
+      <span class="agent-badge" id="ab-ana" style="background:rgba(167,139,250,0.1);color:var(--analyst)">待机</span>
+    </div>
+  </div>
+</div>
+
+<!-- CENTER -->
+<div class="chat-panel">
+  <div class="chat-topbar">
+    <span class="chat-title">跨赋经营指挥台</span>
+    <div class="chip-row">
+      <span class="chip" id="ch-supply" style="color:var(--supply);border-color:rgba(0,201,167,0.3)">经营评估</span>
+      <span class="chip" id="ch-mkt" style="color:var(--marketing);border-color:rgba(249,115,22,0.3)">达人营销</span>
+      <span class="chip" id="ch-comp" style="color:var(--compliance);border-color:rgba(245,158,11,0.3)">合规</span>
+      <span class="chip" id="ch-log" style="color:var(--logistics);border-color:rgba(56,189,248,0.3)">物流</span>
+      <span class="chip" id="ch-ana" style="color:var(--analyst);border-color:rgba(167,139,250,0.3)">分析师</span>
+    </div>
+  </div>
+
+  <div class="msgs" id="msgs"></div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="pLabel">等待指令</span>
+      <span id="pPct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="pFill"></div></div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <textarea class="cinput" id="cinput" rows="1" placeholder="向明心跨赋AI员工团队下达经营目标…" readonly></textarea>
+      <button class="send-btn">&#9658;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right-panel">
+  <div class="panel-label">实时交付物</div>
+  <div class="dlist" id="dlist"></div>
+</div>
+
+</div><!-- .main -->
+</div><!-- .layout-wrap -->
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button class="cbtn" id="prevBtn" disabled>&#8592; 上一步</button>
+  <span class="cscene" id="cscene">0 / 6</span>
+  <button class="cbtn primary" id="nextBtn">&#9654; 开始演示</button>
+  <button class="cbtn" id="resetBtn">重置</button>
+</div>
+
+<script>
+// ── SCENES ──────────────────────────────────────────────
+const SCENES = [
+{
+  pct: 8, label: '解析经营目标…',
+  journey: [], chips: [],
+  agents: { supply:'待机', mkt:'待机', comp:'待机', log:'待机', ana:'待机' },
+  hStatus: '任务分发中',
+  msgs: [
+    { cls:'user', av:'你', sender:'经营者', delay:0,
+      html:'帮我把<span class="hl"> 景德镇手工茶杯 </span>完美交付到<span class="hl"> 洛杉矶 C 端买家</span>，全链路合规，T+180s 出净利润核算。' },
+    { cls:'orch', av:'跨', sender:'跨赋 · 跨境服务大模型', delay:1100,
+      html:'指令解析完成。调用<span class="hl">明心跨境服务大模型</span>，正在拆分任务包并分发至各 AI 员工…<br><div class="dispatch-list" style="margin-top:9px">\
+<div class="dr"><span class="dr-agent" style="color:var(--supply)">经营评估小明</span><span class="dr-task">产融方案Agent · 财务分析Agent</span><span class="dr-badge" style="background:rgba(0,201,167,0.15);color:var(--supply)">ACTIVE</span></div>\
+<div class="dr"><span class="dr-agent" style="color:var(--marketing)">达人营销小明</span><span class="dr-task">达人匹配Agent · 视频Agent · 文案Agent</span><span class="dr-badge" style="background:rgba(249,115,22,0.15);color:var(--marketing)">ACTIVE</span></div>\
+<div class="dr"><span class="dr-agent" style="color:var(--compliance)">合规小明</span><span class="dr-task">商品归类Agent · 智能退税Agent · 纳税申报Agent</span><span class="dr-badge" style="background:rgba(245,158,11,0.15);color:var(--compliance)">ACTIVE</span></div>\
+<div class="dr"><span class="dr-agent" style="color:var(--logistics)">物流小明</span><span class="dr-task">物流线路Agent · 运力资源Agent · 运踪GPT</span><span class="dr-badge" style="background:rgba(56,189,248,0.12);color:var(--muted)">STANDBY</span></div>\
+<div class="dr"><span class="dr-agent" style="color:var(--analyst)">分析师小明</span><span class="dr-task">财务分析Agent · 全链路成本核算</span><span class="dr-badge" style="background:rgba(167,139,250,0.12);color:var(--muted)">STANDBY</span></div>\
+</div>' }
+  ],
+  cards: []
+},
+{
+  pct: 22, label: '供应链采购 · 景德镇端',
+  journey: [0], chips: ['ch-supply'],
+  agents: { supply:'运行中', mkt:'待机', comp:'待机', log:'待机', ana:'待机' },
+  hStatus: '经营评估小明 · 运行中',
+  msgs: [
+    { cls:'supply', av:'评', sender:'经营评估小明  ·  产融方案Agent', delay:0,
+      html:'正在对接景德镇供货工厂物联网数据接口（<span class="mono">DE-交易云</span>）…<br><br>\
+✅ <span class="hl">SKU 数字建模完成</span><br>\
+<span class="mono">JDZ-CUP-WHT-260ML</span> · 高白泥 · 净重 180g · 8×9cm<br>\
+含铅量检测 <span class="tag" style="background:rgba(0,201,167,0.15);color:var(--supply)">PASS</span> — 符合 FDA 21 CFR 109.16 标准<br><br>\
+✅ <span class="hl">防碎包装规格</span>：双层气泡膜 + 纸盒内衬，跌落测试通过' },
+    { cls:'supply', av:'评', sender:'经营评估小明  ·  产融方案Agent', delay:1900,
+      html:'<span class="mono">DE-监测云</span> 检测到资金垫付缺口：本批次 500 只，工厂账期 30 天，预计缺口 <span class="hl">¥ 42,000</span><br><br>\
+<div class="hitl"><span class="hitl-ico">🏦</span><span class="hitl-txt">已将采购合同封装为数字信用资产，拟通过<strong>明心产融通道</strong>向合作银行申请贸易融资（低时延通道，合作贷款规模超1500亿元·零不良）。请确认授权。</span><button class="hitl-btn" onclick="okHITL(this)">授权</button><span class="hitl-ok">✓ 已授权</span></div>' }
+  ],
+  cards: [
+    { cls:'dc-supply', icon:'📦', title:'SKU 数字档案', badge:'经营评估',
+      body:'<div class="drow"><span class="drow-l">商品编号</span><span class="drow-v">JDZ-CUP-WHT-260ML</span></div><div class="drow"><span class="drow-l">含铅检测</span><span class="drow-v" style="color:var(--supply)">PASS · FDA合规</span></div><div class="drow"><span class="drow-l">物联采集</span><span class="drow-v">DE-监测云 接入</span></div>' },
+    { cls:'dc-supply', icon:'💰', title:'贸易融资申请单', badge:'产融方案',
+      body:'<div class="drow"><span class="drow-l">缺口金额</span><span class="drow-v">¥ 42,000</span></div><div class="drow"><span class="drow-l">通道</span><span class="drow-v">明心产融 · 总行直连</span></div><div class="drow"><span class="drow-l">预计到账</span><span class="drow-v" style="color:var(--supply)">T+4h</span></div>' }
+  ]
+},
+{
+  pct: 40, label: '达人营销 · 洛杉矶端',
+  journey: [0, 4], chips: ['ch-mkt'],
+  agents: { supply:'完成', mkt:'运行中', comp:'运行中', log:'待机', ana:'待机' },
+  hStatus: '达人营销 + 合规 · 并行',
+  msgs: [
+    { cls:'mkt', av:'营', sender:'达人营销小明  ·  达人匹配Agent', delay:0,
+      html:'正在扫描 TikTok & Instagram 达人数据库，筛选条件：<span class="mono">美学生活 · 禅意茶道 · 手工艺</span> · 洛杉矶本土 · 粉丝 1w-50w…<br><br>\
+<span class="hl">命中 17 位精准达人</span>，Top-3 预览：<br>\
+<div class="dispatch-list" style="margin-top:6px">\
+<div class="dr"><span style="font-size:10.5px">@zen.teahouse.la</span><span class="dr-task">28.4w粉 · 互动率 6.2%</span><span class="dr-badge" style="background:rgba(249,115,22,0.15);color:var(--marketing)">TOP</span></div>\
+<div class="dr"><span style="font-size:10.5px">@artisan.lifestyle</span><span class="dr-task">12.1w粉 · 互动率 8.9%</span></div>\
+<div class="dr"><span style="font-size:10.5px">@la.ceramics.daily</span><span class="dr-task">9.6w粉 · 互动率 11.2%</span></div>\
+</div>' },
+    { cls:'mkt', av:'营', sender:'达人营销小明  ·  文案Agent + 视频Agent', delay:1700,
+      html:'✅ <span class="hl">文案Agent</span> 已生成英文个性化 Brief，强调景德镇非遗工艺叙事<br>\
+✅ <span class="hl">视频Agent</span> 已生成 TikTok 短视频脚本（60s）：禅意东方·手工烧制·跨越太平洋<br>\
+✅ Shopify Listing 已生成，突出"千年瓷都·Song Dynasty Glaze"文化卖点<br><br>\
+<div class="hitl"><span class="hitl-ico">🔒</span><span class="hitl-txt">3 位达人已接受样品邀约。将写入<strong>品牌中央资产库</strong>全局锁定，防止内部撞单。请确认。</span><button class="hitl-btn" onclick="okHITL(this)">锁定资产</button><span class="hitl-ok">✓ 已锁定</span></div>' }
+  ],
+  cards: [
+    { cls:'dc-mkt', icon:'📱', title:'达人匹配报告', badge:'达人营销',
+      body:'<div class="drow"><span class="drow-l">命中达人</span><span class="drow-v">17 位</span></div><div class="drow"><span class="drow-l">预计触达</span><span class="drow-v">50w+ UV</span></div><div class="drow"><span class="drow-l">平均互动率</span><span class="drow-v" style="color:var(--marketing)">8.8%</span></div>' },
+    { cls:'dc-mkt', icon:'🛍', title:'Shopify Listing 草稿', badge:'文案Agent',
+      body:'<div class="dbody">标题：Jingdezhen Hand-Thrown Tea Cup · Song Dynasty Glaze · Limited Edition<br><span style="color:var(--marketing)">状态：待审核发布</span></div>' }
+  ]
+},
+{
+  pct: 60, label: '报关清关 · 跨国合规',
+  journey: [0, 1, 3], chips: ['ch-comp'],
+  agents: { supply:'完成', mkt:'完成', comp:'运行中', log:'运行中', ana:'待机' },
+  hStatus: '合规小明 · 三步法执行中',
+  msgs: [
+    { cls:'comp', av:'规', sender:'合规小明  ·  商品归类Agent', delay:0,
+      html:'<span class="hl">Step 1</span> — AI智能归类：<span class="mono">6912.00</span>（陶瓷餐具·非骨瓷），<span class="tag" style="background:rgba(245,158,11,0.15);color:var(--compliance)">出口退税率 13%</span>，规避错报风险 ✅<br><br>\
+<span class="hl">Step 2</span> — AI退税"四单对碰"（明心疑点核查Agent扫描 1000+ 风险点）：<br>\
+订单 ✅ · 运单 ✅ · 支付单 ✅ · 发票 ✅<br>\
+退税处理：<span class="hl">最快当天申报当天到账</span>（行业基准 3-5 工作日）<br><br>\
+<span class="hl">Step 3</span> — 申报包推送 CTAIS / 金税系统 ✅' },
+    { cls:'comp', av:'规', sender:'合规小明  ·  纳税申报Agent', delay:1900,
+      html:'<span class="hl">美国清关预审</span>（100% 中美海关数据覆盖）：<br><br>\
+🔴 <span style="color:#f87171;">核心风险识别</span>：陶瓷接触食品器皿须通过 FDA 铅/镉溶出量测试<br>（Pb ≤ 2.5μg/mL · Cd ≤ 0.25μg/mL）<br><br>\
+✅ 前置核验 SGS 实验室报告：<span class="tag" style="background:rgba(0,201,167,0.15);color:var(--supply)">COMPLIANT</span><br>\
+✅ 加州 Nexus 经济关联判定触发，<span class="hl">Sales Tax 9.5%</span> 自动计算并申报入账<br>\
+✅ 买家个人数据传输合规：中国数据出境安全评估 + 加州 CCPA ✓' }
+  ],
+  cards: [
+    { cls:'dc-comp', icon:'📋', title:'AI出口退税申报包', badge:'智能退税Agent',
+      body:'<div class="drow"><span class="drow-l">退税金额（预估）</span><span class="drow-v">¥ 18,200</span></div><div class="drow"><span class="drow-l">处理时长</span><span class="drow-v" style="color:var(--compliance)">当天到账（↓97%）</span></div><div class="drow"><span class="drow-l">状态</span><span class="drow-v">已推送 CTAIS</span></div>' },
+    { cls:'dc-comp', icon:'🇺🇸', title:'FDA 清关预审报告', badge:'合规小明',
+      body:'<div class="drow"><span class="drow-l">铅溶出</span><span class="drow-v" style="color:var(--supply)">0.18μg/mL · PASS</span></div><div class="drow"><span class="drow-l">镉溶出</span><span class="drow-v" style="color:var(--supply)">0.04μg/mL · PASS</span></div><div class="drow"><span class="drow-l">加州 Sales Tax</span><span class="drow-v">9.5% · 已申报</span></div>' }
+  ]
+},
+{
+  pct: 78, label: '全球物流调度 · 异常熔断',
+  journey: [0, 1, 2, 3], chips: ['ch-log'],
+  agents: { supply:'完成', mkt:'完成', comp:'完成', log:'运行中', ana:'待机' },
+  hStatus: '物流小明 · 运踪GPT监控中',
+  msgs: [
+    { cls:'log', av:'物', sender:'物流小明  ·  物流线路Agent + 运踪GPT', delay:0,
+      html:'接入明心物流数据库（全球200+航司 · 50+船东 · 100%北美内陆点 · 北美60+港口）…<br><br>\
+头程：景德镇 → 深圳盐田港，<span class="hl">德邦快运</span>，次日达 ✅<br>\
+干线：盐田 → 洛杉矶港，<span class="hl">ONE海运·美西快线</span>，预计 13 天 ✅<br>\
+尾程：LA海外仓 → 买家公寓，<span class="hl">USPS Priority</span>，T+2 ✅<br><br>\
+运踪GPT 实时监控 500+ 承运商轨迹，当前状态：<span class="tag" style="background:rgba(0,201,167,0.12);color:var(--supply)">正常</span>' },
+    { cls:'log', av:'物', sender:'物流小明  ·  运力资源Agent', delay:1700,
+      html:'<div class="anomaly"><div class="anomaly-t">🚨 异常预警 — 洛杉矶港工人罢工风险（T+7d）</div><div class="anomaly-b">情报来源：LGB 码头工会谈判破裂，预计影响 14 天，波及 60% 海运货物。</div><div class="anomaly-a">↳ 已调取 47 种非标知识库，输出应对方案</div></div><br>\
+<div class="hitl"><span class="hitl-ico">✈️</span><span class="hitl-txt">建议 T+48h 内切换<strong>广州→LA 空运直飞</strong>。《空海运切换 ROI 决策单》已就绪：空运溢价 $12/kg，净利润仍为正，时效 13天→4天。请确认执行。</span><button class="hitl-btn" onclick="okHITL(this)">确认切空运</button><span class="hitl-ok">✓ 已切换</span></div>' }
+  ],
+  cards: [
+    { cls:'dc-log', icon:'🛳', title:'全链路物流追踪面板', badge:'运踪GPT',
+      body:'<div class="drow"><span class="drow-l">当前节点</span><span class="drow-v">深圳盐田港·待装船</span></div><div class="drow"><span class="drow-l">预计到港</span><span class="drow-v">6月7日</span></div><div class="drow"><span class="drow-l">异常预警</span><span class="drow-v" style="color:#f87171">LGB港罢工风险</span></div>' },
+    { cls:'dc-log', icon:'📊', title:'空海运切换 ROI 决策单', badge:'运力资源Agent',
+      body:'<div class="drow"><span class="drow-l">空运溢价</span><span class="drow-v">$12/kg (+¥320)</span></div><div class="drow"><span class="drow-l">时效</span><span class="drow-v" style="color:var(--logistics)">13天→4天</span></div><div class="drow"><span class="drow-l">净利润影响</span><span class="drow-v" style="color:var(--supply)">仍为正 ✓</span></div>' }
+  ]
+},
+{
+  pct: 95, label: '经营核算 · T+180s 出单',
+  journey: [0, 1, 2, 3, 4], chips: ['ch-ana'],
+  agents: { supply:'完成', mkt:'完成', comp:'完成', log:'完成', ana:'运行中' },
+  hStatus: '分析师小明 · T+180s 核算中',
+  msgs: [
+    { cls:'ana', av:'析', sender:'分析师小明  ·  财务分析Agent', delay:0,
+      html:'全链路数据收口完成，开始净利润核算…<br><br>\
+<div class="profit-box">\
+<div class="profit-title">📈 景德镇茶杯 · 单件盈利拆解（LA售价 $68 · 约 ¥490）</div>\
+<div class="profit-row"><span class="profit-label">出厂成本</span><span>¥ 120</span></div>\
+<div class="profit-row"><span class="profit-label">头程物流（德邦）</span><span>¥ 18</span></div>\
+<div class="profit-row"><span class="profit-label">空运干线（广州→LA）</span><span>¥ 52</span></div>\
+<div class="profit-row"><span class="profit-label">尾程派送（USPS）</span><span>¥ 38</span></div>\
+<div class="profit-row"><span class="profit-label">TikTok 广告公耗</span><span>¥ 45</span></div>\
+<div class="profit-row"><span class="profit-label">加州 Sales Tax (9.5%)</span><span>¥ 47</span></div>\
+<div class="profit-row"><span class="profit-label">跨国汇损 (1.2%)</span><span>¥ 6</span></div>\
+<div class="profit-total"><span>净利润</span><span>¥ 164 · 利润率 33.5%</span></div>\
+</div>' },
+    { cls:'ana', av:'析', sender:'分析师小明  ·  今日行动清单', delay:1900,
+      html:'⚡ <span class="hl">今日行动清单</span>（T+180s 弹出）：<br><br>\
+① 建议加购 <span class="hl">200 只备货</span>至美西海外仓，Black Friday 缓冲库存<br>\
+② @zen.teahouse.la 接样后提升 Spark Ads 预算 <span class="hl">+¥3,000/天</span><br>\
+③ 本批次退税 ¥18,200 预计当天到账，可滚动投入下批次采购<br>\
+④ 产融授信剩余额度 70%，可承接下一批次' },
+    { cls:'vault', av:'链', sender:'明心合规存证 · Compliance Vault', delay:3400,
+      html:'✅ 本次全链路存证完成，以下单据已附唯一哈希值写入 Compliance Vault：<br><br>\
+<span class="mono">报关单</span> · <span class="mono">FDA报告</span> · <span class="mono">银行流水</span> · <span class="mono">退税申报包</span> · <span class="mono">AI决策快照×5</span><br><br>\
+<div class="hash">SHA-256: a3f7c2e8d1b04592f6...f9e6a1c3 · Block #8,847,291<br>存证时间: 2026-05-25 11:28:54 UTC · 不可篡改</div><br>\
+<span style="font-size:11px;color:var(--vault)">审计可追溯率 100% · 大模型决策幻觉风险归零</span>' }
+  ],
+  cards: [
+    { cls:'dc-ana', icon:'💰', title:'单品净利润核算', badge:'分析师小明',
+      body:'<div class="drow"><span class="drow-l">售价</span><span class="drow-v">$68 (¥490)</span></div><div class="drow"><span class="drow-l">全链路成本</span><span class="drow-v">¥ 326</span></div><div class="drow"><span class="drow-l">净利润</span><span class="drow-v" style="color:var(--supply);font-size:13px;font-weight:800">¥ 164 · 33.5%</span></div>' },
+    { cls:'dc-ana', icon:'📋', title:'今日行动清单', badge:'分析师小明',
+      body:'<div class="dbody">① 加购200只备货至LA仓<br>② Spark Ads预算 +¥3k/d<br>③ 退税当天到账·滚动复投<br>④ 产融额度充足·下批可启</div>' },
+    { cls:'dc-vault', icon:'🔐', title:'Compliance Vault 存证', badge:'白盒存证',
+      body:'<div class="drow"><span class="drow-l">存证文件数</span><span class="drow-v">9 份</span></div><div class="drow"><span class="drow-l">AI决策快照</span><span class="drow-v">5 条</span></div><div class="drow"><span class="drow-l">可审计率</span><span class="drow-v" style="color:var(--vault)">100%</span></div><div class="hash">a3f7c2e8d1b04592...f9e6a1c3</div>' }
+  ]
+},
+{
+  pct: 100, label: '全链路交付完成 ✓',
+  journey: [0,1,2,3,4], chips: [],
+  agents: { supply:'完成', mkt:'完成', comp:'完成', log:'完成', ana:'完成' },
+  hStatus: '全链路完成 · 明心跨赋',
+  msgs: [
+    { cls:'orch', av:'跨', sender:'跨赋 · 跨境服务大模型', delay:0,
+      html:'✅ <span class="hl">全链路任务完成</span>，5位AI员工协同完成一只景德镇茶杯的全球商业旅程：<br><div class="dispatch-list" style="margin-top:9px">\
+<div class="dr"><span class="dr-agent" style="color:var(--supply)">经营评估小明</span><span class="dr-task">SKU建模 · 质检 · 产融融资授信</span><span class="dr-badge" style="background:rgba(0,201,167,0.15);color:var(--supply)">✓</span></div>\
+<div class="dr"><span class="dr-agent" style="color:var(--marketing)">达人营销小明</span><span class="dr-task">17位达人建联 · Listing · TikTok脚本</span><span class="dr-badge" style="background:rgba(0,201,167,0.15);color:var(--supply)">✓</span></div>\
+<div class="dr"><span class="dr-agent" style="color:var(--compliance)">合规小明</span><span class="dr-task">退税当天到账 · FDA通关 · Sales Tax</span><span class="dr-badge" style="background:rgba(0,201,167,0.15);color:var(--supply)">✓</span></div>\
+<div class="dr"><span class="dr-agent" style="color:var(--logistics)">物流小明</span><span class="dr-task">港口罢工熔断 · 空运切换ROI决策</span><span class="dr-badge" style="background:rgba(0,201,167,0.15);color:var(--supply)">✓</span></div>\
+<div class="dr"><span class="dr-agent" style="color:var(--analyst)">分析师小明</span><span class="dr-task">净利¥164 · 今日行动清单 · 全链存证</span><span class="dr-badge" style="background:rgba(0,201,167,0.15);color:var(--supply)">✓</span></div>\
+</div><br>\
+<span style="color:var(--muted);font-size:10.5px">明心数智 · 创建共信产业生态 · AI赋能产业出海</span>' }
+  ],
+  cards: []
+}
+];
+
+// ── STATE ────────────────────────────────────────────────
+let scene = -1, busy = false;
+
+// ── HELPERS ──────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function okHITL(btn) {
+  const ok = btn.nextElementSibling;
+  btn.style.display = 'none';
+  ok.style.display = 'inline-block';
+}
+
+function setAgent(id, status) {
+  const dot = document.getElementById('ad-' + id);
+  const lbl = document.getElementById('al-' + id);
+  const badge = document.getElementById('ab-' + id);
+  dot.classList.remove('running', 'done');
+  lbl.classList.remove('active');
+  const colors = { supply:'var(--supply)', mkt:'var(--marketing)', comp:'var(--compliance)', log:'var(--logistics)', ana:'var(--analyst)' };
+  const c = colors[id];
+  if (status === '运行中') {
+    dot.classList.add('running');
+    lbl.classList.add('active');
+    badge.textContent = '运行中';
+    badge.style.cssText = `background:rgba(99,220,150,0.12);color:#4ade80;font-size:9px;padding:1px 5px;border-radius:3px;`;
+  } else if (status === '完成') {
+    dot.classList.add('done');
+    lbl.classList.add('active');
+    badge.textContent = '完成';
+    badge.style.cssText = `background:rgba(0,201,167,0.1);color:var(--supply);font-size:9px;padding:1px 5px;border-radius:3px;`;
+  } else {
+    badge.textContent = '待机';
+    badge.style.cssText = `background:rgba(100,116,139,0.08);color:var(--muted);font-size:9px;padding:1px 5px;border-radius:3px;`;
+  }
+}
+
+function setJourney(active) {
+  for (let i = 0; i < 5; i++) {
+    const node = document.getElementById('jn' + i);
+    const tag = document.getElementById('nt' + i);
+    node.classList.remove('active', 'done');
+    if (!active.includes(i)) { tag.textContent = 'PENDING'; tag.style.cssText = ''; continue; }
+    const isLatest = active[active.length - 1] === i;
+    node.classList.add(isLatest ? 'active' : 'done');
+    tag.textContent = isLatest ? 'ACTIVE' : 'DONE';
+  }
+}
+
+function setChips(active) {
+  ['ch-supply','ch-mkt','ch-comp','ch-log','ch-ana'].forEach(id => {
+    document.getElementById(id).classList.toggle('lit', active.includes(id));
+  });
+}
+
+async function addMsg(m) {
+  await sleep(m.delay || 0);
+  const box = document.getElementById('msgs');
+
+  // show typing
+  const tmp = document.createElement('div');
+  tmp.className = `msg ${m.cls} show`;
+  tmp.innerHTML = `<div class="avatar">${m.av}</div><div class="bubble-wrap"><div class="sender">${m.sender}</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>`;
+  box.appendChild(tmp);
+  box.scrollTop = box.scrollHeight;
+
+  const dur = 500 + Math.min(m.html.length * 1.2, 1400);
+  await sleep(dur);
+
+  const el = document.createElement('div');
+  el.className = `msg ${m.cls}`;
+  el.innerHTML = `<div class="avatar">${m.av}</div><div class="bubble-wrap"><div class="sender">${m.sender}</div><div class="bubble">${m.html}</div></div>`;
+  box.replaceChild(el, tmp);
+  await sleep(20);
+  el.classList.add('show');
+  box.scrollTop = box.scrollHeight;
+}
+
+function addCard(c) {
+  const list = document.getElementById('dlist');
+  const el = document.createElement('div');
+  el.className = `dcard ${c.cls}`;
+  el.innerHTML = `<div class="dcard-head"><span class="dcard-icon">${c.icon}</span><span class="dcard-title">${c.title}</span><span class="dcard-badge">${c.badge}</span></div>${c.body}`;
+  list.appendChild(el);
+  setTimeout(() => el.classList.add('show'), 40);
+  list.scrollTop = list.scrollHeight;
+}
+
+async function run(idx) {
+  if (busy) return;
+  busy = true;
+  const s = SCENES[idx];
+
+  document.getElementById('pFill').style.width = s.pct + '%';
+  document.getElementById('pLabel').textContent = s.label;
+  document.getElementById('pPct').textContent = s.pct + '%';
+  document.getElementById('hStatus').textContent = s.hStatus;
+  document.getElementById('cscene').textContent = `${idx + 1} / ${SCENES.length}`;
+
+  setJourney(s.journey);
+  setChips(s.chips);
+  Object.entries(s.agents).forEach(([k, v]) => setAgent(k, v));
+
+  for (const m of s.msgs) await addMsg(m);
+  for (const c of s.cards) { await sleep(250); addCard(c); }
+
+  busy = false;
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('prevBtn').disabled = false;
+}
+
+// ── CONTROLS ─────────────────────────────────────────────
+document.getElementById('nextBtn').addEventListener('click', async () => {
+  if (busy) return;
+  scene++;
+  if (scene >= SCENES.length) { scene = SCENES.length - 1; return; }
+  document.getElementById('nextBtn').disabled = true;
+  document.getElementById('nextBtn').textContent = scene === SCENES.length - 1 ? '完成 ✓' : '下一步 ›';
+  await run(scene);
+  if (scene < SCENES.length - 1) document.getElementById('nextBtn').textContent = '下一步 ›';
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  document.getElementById('resetBtn').click();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  scene = -1; busy = false;
+  document.getElementById('msgs').innerHTML = '';
+  document.getElementById('dlist').innerHTML = '';
+  document.getElementById('pFill').style.width = '0%';
+  document.getElementById('pLabel').textContent = '等待指令';
+  document.getElementById('pPct').textContent = '0%';
+  document.getElementById('hStatus').textContent = '待机中';
+  document.getElementById('cscene').textContent = '0 / 6';
+  document.getElementById('nextBtn').textContent = '▶ 开始演示';
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('prevBtn').disabled = true;
+  setJourney([]); setChips([]);
+  ['supply','mkt','comp','log','ana'].forEach(k => setAgent(k, '待机'));
+});
+</script>
+</body>
+</html>

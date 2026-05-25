@@ -285,6 +285,8 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;b
 // ============================================================
 // CONFIGURATION
 // ============================================================
+// AI proxy: try relative /api/chat (Next.js server), fallback to direct gateway
+const AI_PROXY_URL = '/api/chat';
 const AI_BASE = 'http://ai-gateway-proxy-prod.flycast';
 const AI_KEY = '85bda3035d154afb8d945b1f612252c6';
 const AI_MODEL = 'anthropic/claude-haiku-4.5';
@@ -651,12 +653,27 @@ async function sendMsg(){
   let fullResp='';
 
   try{
-    const res=await fetch(`${AI_BASE}/api/v1/chat/completions`,{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+AI_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({model:AI_MODEL,messages,stream:true,max_tokens:600})
-    });
-    if(!res.ok)throw new Error('API '+res.status);
+    // Try Next.js proxy first (works when served from Next.js server)
+    // Falls back to direct gateway (works within server sandbox)
+    let res;
+    let useProxy=true;
+    try{
+      res=await fetch(AI_PROXY_URL,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:text,agentId,history:msgHistory.slice(-6)})
+      });
+      if(!res.ok)throw new Error('proxy '+res.status);
+    }catch(proxyErr){
+      useProxy=false;
+      res=await fetch(`${AI_BASE}/api/v1/chat/completions`,{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+AI_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({model:AI_MODEL,messages,stream:true,max_tokens:600})
+      });
+      if(!res.ok)throw new Error('API '+res.status);
+    }
+
     const reader=res.body.getReader();
     const dec=new TextDecoder();
 
@@ -674,7 +691,9 @@ async function sendMsg(){
         if(data==='[DONE]')continue;
         try{
           const j=JSON.parse(data);
-          const delta=j.choices?.[0]?.delta?.content||'';
+          // Next.js proxy format: {type:'delta',content:'...'}
+          // Direct gateway format: {choices:[{delta:{content:'...'}}]}
+          const delta=useProxy?(j.type==='delta'?j.content:''):(j.choices?.[0]?.delta?.content||'');
           if(delta){
             fullResp+=delta;
             bubble.innerHTML=fullResp.replace(/\n/g,'<br>')+'<span class="cursor"></span>';
@@ -686,7 +705,7 @@ async function sendMsg(){
     typingDiv.querySelector('.cursor')?.remove();
     msgHistory.push({role:'assistant',content:fullResp});
   }catch(err){
-    typingDiv.querySelector('.bubble').innerHTML=`<span style="color:#f87171">连接失败：${err.message}</span>`;
+    typingDiv.querySelector('.bubble').innerHTML=`<span style="color:#f87171">AI连接不可用（请通过 Next.js 服务访问以启用实时对话）</span>`;
   }
 
   document.getElementById('send-btn').disabled=false;

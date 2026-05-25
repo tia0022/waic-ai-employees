@@ -324,6 +324,13 @@
   .cbtn.primary:hover:not(:disabled) { background: rgba(99,102,241,0.28); }
   .cbtn:disabled { opacity: 0.3; cursor: default; }
   .cscene { font-size: 10.5px; color: var(--muted); padding: 0 4px; }
+  .cselect {
+    font-size: 11px; padding: 4px 10px; border-radius: 10px;
+    border: 1px solid var(--border); background: rgba(13,17,32,0.9); color: var(--muted);
+    cursor: pointer; font-family: inherit; outline: none; max-width: 180px;
+  }
+  .cselect:focus { border-color: rgba(99,102,241,0.4); color: var(--text); }
+  .cselect option { background: #0d1120; color: var(--text); }
 </style>
 </head>
 <body>
@@ -467,6 +474,16 @@
 <div class="controls">
   <button class="cbtn" id="prevBtn" disabled>&#8592; 上一步</button>
   <span class="cscene" id="cscene">0 / 6</span>
+  <select class="cselect" id="sceneSelect">
+    <option value="-1">-- 跳转场景 --</option>
+    <option value="0">① 任务分发</option>
+    <option value="1">② 供应链采购</option>
+    <option value="2">③ 达人营销</option>
+    <option value="3">④ 报关清关</option>
+    <option value="4">⑤ 物流调度</option>
+    <option value="5">⑥ 经营核算</option>
+    <option value="6">⑦ 全链路完成</option>
+  </select>
   <button class="cbtn primary" id="nextBtn">&#9654; 开始演示</button>
   <button class="cbtn" id="resetBtn">重置</button>
 </div>
@@ -771,10 +788,78 @@ document.getElementById('nextBtn').addEventListener('click', async () => {
   document.getElementById('nextBtn').textContent = scene === SCENES.length - 1 ? '完成 ✓' : '下一步 ›';
   await run(scene);
   if (scene < SCENES.length - 1) document.getElementById('nextBtn').textContent = '下一步 ›';
+  document.getElementById('sceneSelect').value = String(scene);
 });
 
-document.getElementById('prevBtn').addEventListener('click', () => {
-  document.getElementById('resetBtn').click();
+// fast-replay: reset then replay all scenes up to target with 0 delays
+async function replayTo(targetScene) {
+  if (busy) return;
+  // full reset without touching scene/busy
+  document.getElementById('msgs').innerHTML = '';
+  document.getElementById('dlist').innerHTML = '';
+  document.getElementById('pFill').style.width = '0%';
+  document.getElementById('pLabel').textContent = '等待指令';
+  document.getElementById('pPct').textContent = '0%';
+  document.getElementById('hStatus').textContent = '待机中';
+  setJourney([]); setChips([]);
+  ['supply','mkt','comp','log','ana'].forEach(k => setAgent(k, '待机'));
+
+  // replay instantly (0 delay)
+  for (let i = 0; i <= targetScene; i++) {
+    const s = SCENES[i];
+    document.getElementById('pFill').style.width = s.pct + '%';
+    document.getElementById('pLabel').textContent = s.label;
+    document.getElementById('pPct').textContent = s.pct + '%';
+    document.getElementById('hStatus').textContent = s.hStatus;
+    setJourney(s.journey); setChips(s.chips);
+    Object.entries(s.agents).forEach(([k, v]) => setAgent(k, v));
+    for (const m of s.msgs) {
+      const el = document.createElement('div');
+      el.className = 'msg ' + m.cls + ' show';
+      el.innerHTML = '<div class="avatar">' + m.av + '</div><div class="bubble-wrap"><div class="sender">' + m.sender + '</div><div class="bubble">' + m.html + '</div></div>';
+      document.getElementById('msgs').appendChild(el);
+    }
+    for (const c of s.cards) {
+      const list = document.getElementById('dlist');
+      const el = document.createElement('div');
+      el.className = 'dcard ' + c.cls + ' show';
+      el.innerHTML = '<div class="dcard-head"><span class="dcard-icon">' + c.icon + '</span><span class="dcard-title">' + c.title + '</span><span class="dcard-badge">' + c.badge + '</span></div>' + c.body;
+      list.appendChild(el);
+    }
+  }
+  scene = targetScene;
+  document.getElementById('cscene').textContent = (scene + 1) + ' / ' + SCENES.length;
+  document.getElementById('nextBtn').textContent = scene >= SCENES.length - 1 ? '完成 ✓' : '下一步 ›';
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('prevBtn').disabled = scene <= 0;
+  document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+  document.getElementById('dlist').scrollTop = document.getElementById('dlist').scrollHeight;
+  // sync dropdown
+  document.getElementById('sceneSelect').value = String(scene);
+}
+
+document.getElementById('prevBtn').addEventListener('click', async () => {
+  if (busy || scene <= 0) return;
+  await replayTo(scene - 1);
+});
+
+// dropdown jump
+document.getElementById('sceneSelect').addEventListener('change', async (e) => {
+  const target = parseInt(e.target.value);
+  if (isNaN(target) || target < 0) { e.target.value = String(scene); return; }
+  if (target === scene) return;
+  if (target < scene) {
+    await replayTo(target);
+  } else {
+    // fast-forward: replay to current then continue
+    await replayTo(scene);
+    for (let i = scene + 1; i <= target; i++) {
+      scene = i;
+      document.getElementById('cscene').textContent = (scene + 1) + ' / ' + SCENES.length;
+      await run(i);
+    }
+  }
+  e.target.value = String(scene);
 });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
@@ -789,6 +874,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   document.getElementById('nextBtn').textContent = '▶ 开始演示';
   document.getElementById('nextBtn').disabled = false;
   document.getElementById('prevBtn').disabled = true;
+  document.getElementById('sceneSelect').value = '-1';
   setJourney([]); setChips([]);
   ['supply','mkt','comp','log','ana'].forEach(k => setAgent(k, '待机'));
 });

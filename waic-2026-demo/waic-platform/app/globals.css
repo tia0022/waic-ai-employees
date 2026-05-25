@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #070a12;
+  --bg2: #0d1120;
+  --bg3: #131829;
+  --border: #1e2640;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --supply: #00c9a7;
+  --marketing: #f97316;
+  --compliance: #f59e0b;
+  --logistics: #38bdf8;
+  --analyst: #a78bfa;
+  --vault: #34d399;
+  --brand: #6366f1;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'SF Pro Display', -apple-system, 'PingFang SC', sans-serif; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes slideIn { from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes typing { 0%,80%,100%{transform:scale(0.8);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+.msg-appear { animation: slideIn 0.25s ease forwards; }
+.typing-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; animation: typing 1.2s infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Demo mode scene cards */
+.scene-card {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+  transition: border-color 0.2s;
+}
+.scene-card:hover { border-color: rgba(99,102,241,0.3); }
+.scene-card.active { border-color: var(--brand); background: rgba(99,102,241,0.06); }

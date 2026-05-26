@@ -331,6 +331,36 @@
   }
   .cselect:focus { border-color: rgba(99,102,241,0.4); color: var(--text); }
   .cselect option { background: #0d1120; color: var(--text); }
+
+/* HANDOFF BAR */
+.ho-bar{display:flex;align-items:center;gap:8px;padding:7px 12px;margin:6px 14px 6px 0;background:rgba(99,102,241,.07);border:1px dashed rgba(99,102,241,.25);border-radius:7px;animation:hoIn .3s ease;flex-shrink:0;max-width:100%}
+@keyframes hoIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.ho-from{font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px}
+.ho-arrow{color:#6366f1;font-size:13px;flex-shrink:0}
+.ho-to{font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px}
+.ho-payload{font-size:9px;color:#64748b;flex:1;margin-left:4px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ho-tag{font-size:9px;background:rgba(99,102,241,.12);color:#818cf8;padding:1px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+
+/* DECISION SNAPSHOT MODAL */
+#snap-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);align-items:center;justify-content:center}
+#snap-modal.open{display:flex}
+.snap-box{background:#0d1629;border:1px solid rgba(99,102,241,.35);border-radius:12px;padding:20px;max-width:400px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:hoIn .25s ease}
+.snap-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.snap-title{font-size:12px;font-weight:700;color:#c7d2fe}
+.snap-sub{font-size:9px;color:#64748b;margin-top:2px}
+.snap-close{cursor:pointer;color:#475569;font-size:18px;line-height:1;padding:0 4px}
+.snap-close:hover{color:#94a3b8}
+.snap-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:11px;gap:8px}
+.snap-row:last-child{border:none}
+.snap-lbl{color:#64748b;flex-shrink:0}
+.snap-val{color:#e2e8f0;font-family:monospace;font-size:10px;text-align:right;word-break:break-all}
+.snap-hash{font-size:9px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);color:#34d399;padding:8px 10px;border-radius:6px;font-family:monospace;word-break:break-all;margin-top:12px;line-height:1.5}
+.dcard[data-snap]{cursor:pointer;position:relative;transition:.15s}
+.dcard[data-snap]:hover{filter:brightness(1.18)}
+.dcard[data-snap]::after{content:'白盒可信 ↗';position:absolute;top:6px;right:8px;font-size:8px;color:#6366f1;opacity:.7}
+
+/* BEFORE/AFTER CARD */
+.dc-ba{background:rgba(99,102,241,.04);border-color:rgba(99,102,241,.2)!important}
 </style>
 </head>
 <body>
@@ -433,7 +463,7 @@
 <!-- CENTER -->
 <div class="chat-panel">
   <div class="chat-topbar">
-    <span class="chat-title">跨赋经营指挥台</span>
+    <span class="chat-title">Minos 经营指挥台</span>
     <div class="chip-row">
       <span class="chip" id="ch-supply" style="color:var(--supply);border-color:rgba(0,201,167,0.3)">经营评估</span>
       <span class="chip" id="ch-mkt" style="color:var(--marketing);border-color:rgba(249,115,22,0.3)">达人营销</span>
@@ -580,9 +610,9 @@ const SCENES = [
 ✅ 买家个人数据传输合规：中国数据出境安全评估 + 加州 CCPA ✓' }
   ],
   cards: [
-    { cls:'dc-comp', icon:'📋', title:'AI出口退税申报包', badge:'智能退税Agent',
+    { cls:'dc-comp', icon:'📋', title:'AI出口退税申报包', badge:'智能退税Agent', snap:'tax-refund',
       body:'<div class="drow"><span class="drow-l">退税金额（预估）</span><span class="drow-v">¥ 18,200</span></div><div class="drow"><span class="drow-l">处理时长</span><span class="drow-v" style="color:var(--compliance)">当天到账（↓97%）</span></div><div class="drow"><span class="drow-l">状态</span><span class="drow-v">已推送 CTAIS</span></div>' },
-    { cls:'dc-comp', icon:'🇺🇸', title:'FDA 清关预审报告', badge:'合规小明',
+    { cls:'dc-comp', icon:'🇺🇸', title:'FDA 清关预审报告', badge:'合规小明', snap:'fda-clearance',
       body:'<div class="drow"><span class="drow-l">铅溶出</span><span class="drow-v" style="color:var(--supply)">0.18μg/mL · PASS</span></div><div class="drow"><span class="drow-l">镉溶出</span><span class="drow-v" style="color:var(--supply)">0.04μg/mL · PASS</span></div><div class="drow"><span class="drow-l">加州 Sales Tax</span><span class="drow-v">9.5% · 已申报</span></div>' }
   ]
 },
@@ -605,7 +635,7 @@ const SCENES = [
   cards: [
     { cls:'dc-log', icon:'🛳', title:'全链路物流追踪面板', badge:'运踪GPT',
       body:'<div class="drow"><span class="drow-l">当前节点</span><span class="drow-v">深圳盐田港·待装船</span></div><div class="drow"><span class="drow-l">预计到港</span><span class="drow-v">6月7日</span></div><div class="drow"><span class="drow-l">异常预警</span><span class="drow-v" style="color:#f87171">LGB港罢工风险</span></div>' },
-    { cls:'dc-log', icon:'📊', title:'空海运切换 ROI 决策单', badge:'运力资源Agent',
+    { cls:'dc-log', icon:'📊', title:'空海运切换 ROI 决策单', badge:'运力资源Agent', snap:'logistics-switch',
       body:'<div class="drow"><span class="drow-l">空运溢价</span><span class="drow-v">$12/kg (+¥320)</span></div><div class="drow"><span class="drow-l">时效</span><span class="drow-v" style="color:var(--logistics)">13天→4天</span></div><div class="drow"><span class="drow-l">净利润影响</span><span class="drow-v" style="color:var(--supply)">仍为正 ✓</span></div>' }
   ]
 },
@@ -641,7 +671,7 @@ const SCENES = [
 <span style="font-size:11px;color:var(--vault)">审计可追溯率 100% · 大模型决策幻觉风险归零</span>' }
   ],
   cards: [
-    { cls:'dc-ana', icon:'💰', title:'单品净利润核算', badge:'分析师小明',
+    { cls:'dc-ana', icon:'💰', title:'单品净利润核算', badge:'分析师小明', snap:'profit-calc',
       body:'<div class="drow"><span class="drow-l">售价</span><span class="drow-v">$68 (¥490)</span></div><div class="drow"><span class="drow-l">全链路成本</span><span class="drow-v">¥ 326</span></div><div class="drow"><span class="drow-l">净利润</span><span class="drow-v" style="color:var(--supply);font-size:13px;font-weight:800">¥ 164 · 33.5%</span></div>' },
     { cls:'dc-ana', icon:'📋', title:'今日行动清单', badge:'分析师小明',
       body:'<div class="dbody">① 加购200只备货至LA仓<br>② Spark Ads预算 +¥3k/d<br>③ 退税当天到账·滚动复投<br>④ 产融额度充足·下批可启</div>' },
@@ -665,7 +695,7 @@ const SCENES = [
 </div><br>\
 <span style="color:var(--muted);font-size:10.5px">明心数智 · 创建共信产业生态 · AI赋能产业出海</span>' }
   ],
-  cards: []
+  cards: [{ cls:'dc-ba', icon:'⚡', title:'Before / After 效能对比', badge:'AI vs 传统人工', body:'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px"><div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.18);border-radius:6px;padding:8px"><div style="font-size:9px;font-weight:700;color:#f87171;letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px">传统人工</div><div style="font-size:10px;color:var(--muted);line-height:1.9">退税申请 <b style="color:#f87171">30 天</b><br>HS 归类 <b style="color:#f87171">人工 3 天</b><br>异常响应 <b style="color:#f87171">24 小时</b><br>数据核验 <b style="color:#f87171">逐项人工</b><br>决策追溯 <b style="color:#f87171">不稳定</b></div></div><div style="background:rgba(0,201,167,.06);border:1px solid rgba(0,201,167,.18);border-radius:6px;padding:8px"><div style="font-size:9px;font-weight:700;color:var(--supply);letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px">明心 AI 矩阵</div><div style="font-size:10px;color:var(--text);line-height:1.9">退税 <b style="color:var(--supply)">当天到账 ↓97%</b><br>HS 归类 <b style="color:var(--supply)">0.8 秒 ↓99.9%</b><br>异常响应 <b style="color:var(--supply)">15 分钟 ↓90%</b><br>四单对碰 <b style="color:var(--supply)">AI 全自动</b><br>决策存证 <b style="color:var(--supply)">100% 可审计</b></div></div></div>' }]
 }
 ];
 
@@ -750,6 +780,7 @@ function addCard(c) {
   const list = document.getElementById('dlist');
   const el = document.createElement('div');
   el.className = `dcard ${c.cls}`;
+  if(c.snap){el.dataset.snap=c.snap;el.onclick=()=>showSnap(c.snap);}
   el.innerHTML = `<div class="dcard-head"><span class="dcard-icon">${c.icon}</span><span class="dcard-title">${c.title}</span><span class="dcard-badge">${c.badge}</span></div>${c.body}`;
   list.appendChild(el);
   setTimeout(() => el.classList.add('show'), 40);
@@ -770,6 +801,7 @@ async function run(idx) {
   setJourney(s.journey);
   setChips(s.chips);
   Object.entries(s.agents).forEach(([k, v]) => setAgent(k, v));
+  addHandoff(idx);
 
   for (const m of s.msgs) await addMsg(m);
   for (const c of s.cards) { await sleep(250); addCard(c); }
@@ -813,6 +845,7 @@ async function replayTo(targetScene) {
     document.getElementById('hStatus').textContent = s.hStatus;
     setJourney(s.journey); setChips(s.chips);
     Object.entries(s.agents).forEach(([k, v]) => setAgent(k, v));
+    addHandoff(i);
     for (const m of s.msgs) {
       const el = document.createElement('div');
       el.className = 'msg ' + m.cls + ' show';
@@ -878,6 +911,88 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   setJourney([]); setChips([]);
   ['supply','mkt','comp','log','ana'].forEach(k => setAgent(k, '待机'));
 });
+
+// ── DECISION SNAPSHOTS ──────────────────────────────────────
+const SNAP = {
+  'tax-refund':{title:'AI退税决策快照',sub:'合规小明 · 智能退税Agent',color:'#f59e0b',rows:[
+    ['输入数据 Hash','SHA-256: 3a9f1c7d…e4b2d732'],
+    ['调用模型版本','mingxin-compliance-v2.3.1'],
+    ['HS Code 命中规则','陶瓷餐具非骨瓷 · 6912.00'],
+    ['适用退税率','13% · 财税[2019]39号'],
+    ['四单核验结果','订单✅ · 运单✅ · 支付✅ · 发票✅'],
+    ['决策时间戳','2026-05-25 09:14:32 UTC']
+  ]},
+  'fda-clearance':{title:'FDA 清关预审快照',sub:'合规小明 · 纳税申报Agent',color:'#f59e0b',rows:[
+    ['输入数据 Hash','SHA-256: 7c2e8da1…04f3b91c'],
+    ['调用模型版本','mingxin-compliance-v2.3.1'],
+    ['核验法规','FDA 21 CFR 109.16'],
+    ['铅溶出测定','Pb = 0.18μg/mL ≤ 2.5 · PASS'],
+    ['镉溶出测定','Cd = 0.04μg/mL ≤ 0.25 · PASS'],
+    ['决策时间戳','2026-05-25 09:21:07 UTC']
+  ]},
+  'logistics-switch':{title:'空海运切换决策快照',sub:'物流小明 · 运力资源Agent',color:'#38bdf8',rows:[
+    ['输入数据 Hash','SHA-256: f4a9b263…c0318e5d'],
+    ['调用模型版本','mingxin-logistics-v3.1.0'],
+    ['触发规则','LGB罢工概率>70% · 熔断阈值触发'],
+    ['ROI 计算依据','空运溢价¥320 < 延误损失¥480'],
+    ['知识库命中','非标场景库 #23: 港口罢工切换'],
+    ['决策时间戳','2026-05-25 10:08:44 UTC']
+  ]},
+  'profit-calc':{title:'净利润核算决策快照',sub:'分析师小明 · 财务分析Agent',color:'#a78bfa',rows:[
+    ['输入数据 Hash','SHA-256: 2b7e1516…28f9a041'],
+    ['调用模型版本','mingxin-analyst-v2.0.5'],
+    ['数据来源','全链路 5 个 Agent 实时返回值聚合'],
+    ['汇率来源','中国银行 API · 2026-05-25 11:22'],
+    ['核算耗时','4.2 秒 (T+180s 目标 ✓)'],
+    ['决策时间戳','2026-05-25 11:22:19 UTC']
+  ]}
+};
+
+function showSnap(key){
+  const s=SNAP[key]; if(!s) return;
+  document.getElementById('snap-title').textContent=s.title;
+  document.getElementById('snap-sub').textContent=s.sub;
+  document.getElementById('snap-rows').innerHTML=s.rows.map(([l,v])=>
+    `<div class="snap-row"><span class="snap-lbl">${l}</span><span class="snap-val" style="color:${s.color}">${v}</span></div>`
+  ).join('');
+  document.getElementById('snap-hash').textContent='SHA-256: '+[...key].map(c=>c.charCodeAt(0).toString(16)).join('')+'…'+Math.abs(key.split('').reduce((a,c)=>a*31+c.charCodeAt(0),0)).toString(16)+' · Block #8,847,291 · 2026-05-25 UTC · 不可篡改';
+  document.getElementById('snap-modal').classList.add('open');
+}
+function closeSnap(){document.getElementById('snap-modal').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSnap();});
+
+// ── HANDOFF DATA ─────────────────────────────────────────────
+const HANDOFF=[
+  null,
+  {from:'跨赋大模型',fc:'#6366f1',to:'经营评估小明',tc:'#00c9a7',payload:'任务包 · {SKU: 景德镇茶杯, 目标: LA C端交付, T+180s核算}'},
+  {from:'经营评估小明',fc:'#00c9a7',to:'达人营销小明',tc:'#f97316',payload:'SKU档案 · {商品信息, FDA预检状态, 产融授信 ¥42k}'},
+  {from:'达人营销小明',fc:'#f97316',to:'合规审计小明',tc:'#f59e0b',payload:'营销就绪包 · {Listing草稿, 目标市场: 加州, 达人合同×3}'},
+  {from:'合规审计小明',fc:'#f59e0b',to:'物流调度小明',tc:'#38bdf8',payload:'合规通行证 · {HS Code 6912.00, FDA证书, 退税申报包}'},
+  {from:'物流调度小明',fc:'#38bdf8',to:'分析师小明',tc:'#a78bfa',payload:'物流决策单 · {空运¥52/件, 实际时效4天, 罢工规避 ✓}'},
+  {from:'分析师小明',fc:'#a78bfa',to:'跨赋大模型',tc:'#6366f1',payload:'全链路结果 · {净利¥164·33.5%, 合规存证×9份}'}
+];
+
+function addHandoff(idx){
+  const h=HANDOFF[idx]; if(!h) return;
+  const box=document.getElementById('msgs');
+  const div=document.createElement('div');
+  div.className='ho-bar';
+  div.innerHTML=`<span class="ho-from" style="color:${h.fc};background:rgba(255,255,255,.04)">${h.from}</span><span class="ho-arrow">→</span><span class="ho-to" style="color:${h.tc};background:rgba(255,255,255,.04)">${h.to}</span><span class="ho-payload">${h.payload}</span><span class="ho-tag">接力传递</span>`;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+
 </script>
+
+<div id="snap-modal" onclick="if(event.target===this)closeSnap()">
+  <div class="snap-box">
+    <div class="snap-hdr">
+      <div><div class="snap-title" id="snap-title"></div><div class="snap-sub" id="snap-sub"></div></div>
+      <div class="snap-close" onclick="closeSnap()">✕</div>
+    </div>
+    <div id="snap-rows"></div>
+    <div class="snap-hash" id="snap-hash"></div>
+  </div>
+</div>
 </body>
 </html>
